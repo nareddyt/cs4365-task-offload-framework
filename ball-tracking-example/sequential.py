@@ -1,50 +1,31 @@
-# USAGE
-# python ball_tracking.py --video ball_tracking_example.mp4
-# python ball_tracking.py
 
 # import the necessary packages
 from collections import deque
-from imutils.video import VideoStream
 import numpy as np
-import argparse
 import cv2
 import imutils
 import time
 
-# construct the argument parse and parse the arguments
-ap = argparse.ArgumentParser()
-ap.add_argument("-v", "--video",
-	help="path to the (optional) video file")
-ap.add_argument("-b", "--buffer", type=int, default=64,
-	help="max buffer size")
-args = vars(ap.parse_args())
+TAIL_SIZE = 64
+FPS_AVG_WINDOW = 5
 
 # define the lower and upper boundaries of the "green"
 # ball in the HSV color space, then initialize the
 # list of tracked points
 greenLower = (29, 86, 6)
 greenUpper = (64, 255, 255)
-pts = deque(maxlen=args["buffer"])
+pts = deque(maxlen=TAIL_SIZE)
 
-# if a video path was not supplied, grab the reference
-# to the webcam
-if not args.get("video", False):
-	vs = VideoStream(src=0).start()
+# grab a reference to the video file
+vs = cv2.VideoCapture("./ball_tracking_example.mp4")
 
-# otherwise, grab a reference to the video file
-else:
-	vs = cv2.VideoCapture(args["video"])
-
-# allow the camera or video file to warm up
-time.sleep(2.0)
+start_time = time.time()
+fps_counter = 0
 
 # keep looping
 while True:
 	# grab the current frame
-	frame = vs.read()
-
-	# handle the frame from VideoCapture or VideoStream
-	frame = frame[1] if args.get("video", False) else frame
+	frame = vs.read()[1]
 
 	# if we are viewing a video and we did not grab a frame,
 	# then we have reached the end of the video
@@ -101,24 +82,23 @@ while True:
 
 		# otherwise, compute the thickness of the line and
 		# draw the connecting lines
-		thickness = int(np.sqrt(args["buffer"] / float(i + 1)) * 2.5)
+		thickness = int(np.sqrt(TAIL_SIZE / float(i + 1)) * 2.5)
 		cv2.line(frame, pts[i - 1], pts[i], (0, 0, 255), thickness)
 
 	# show the frame to our screen
 	cv2.imshow("Frame", frame)
-	key = cv2.waitKey(1) & 0xFF
+	cv2.waitKey(1)
 
-	# if the 'q' key is pressed, stop the loop
-	if key == ord("q"):
-		break
+	# Calculate FPS
+	fps_counter += 1
+	end_time = time.time()
+	if (end_time - start_time) > FPS_AVG_WINDOW:
+		print("FPS: ", fps_counter / (end_time - start_time))
+		fps_counter = 0
+		start_time = end_time
 
-# if we are not using a video file, stop the camera video stream
-if not args.get("video", False):
-	vs.stop()
-
-# otherwise, release the camera
-else:
-	vs.release()
+# Stop the video stream
+vs.release()
 
 # close all windows
 cv2.destroyAllWindows()
