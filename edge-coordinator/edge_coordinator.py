@@ -1,9 +1,10 @@
 import time
+import sys
 
 from taskified import tasks
 
-# Declare constants
-FPS_AVG_WINDOW = 5
+# Show FPS every given number of seconds
+FPS_AVG_WINDOW = 3
 
 
 # Helper functions
@@ -11,14 +12,29 @@ def init_fps_counts():
     return [0] * len(tasks)
 
 
-def get_task_names():
+def init_task_names():
     return [task.__name__ for task in tasks]
+
+
+def init_task_limit():
+    # Default to all tasks
+    if len(sys.argv) == 1:
+        return len(tasks)
+
+    end_index = int(sys.argv[1])
+
+    # Check validity
+    if not 0 < end_index <= len(tasks):
+        raise AssertionError('Manual Configuration number of tasks to run is not valid')
+
+    return end_index
 
 
 # Variables for state
 task_index = 0
+task_end_index = init_task_limit()
 fps_counts = init_fps_counts()
-task_names = get_task_names()
+task_names = init_task_names()
 
 
 def run_with_fps(task_func, args):
@@ -57,7 +73,7 @@ while True:
     if (end_time - start_time) > FPS_AVG_WINDOW:
         # Calculate FPS of each task
         real_fps_list = [fps_count / (end_time - start_time) for fps_count in fps_counts]
-        print(list(zip(task_names, real_fps_list)))
+        print('Average FPS', list(zip(task_names, real_fps_list)))
 
         # Reset vars for fps
         fps_counts = init_fps_counts()
@@ -71,7 +87,7 @@ while True:
     task_index += 1
 
     # Reset to first frame if more function calls are not needed or reached end of sequence
-    if to_continue is False or task_index >= len(tasks):
+    if to_continue is False or task_index >= task_end_index:
         task_index = 0
         next_task_args = None
         continue
