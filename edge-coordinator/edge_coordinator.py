@@ -63,6 +63,10 @@ while True:
         fps_counts = init_fps_counts()
         start_time = time.time()
 
+    # No need to continue running tasks, end of stream
+    if to_continue is False and task_index == 0:
+        break
+
     # Increment index (cyclical)
     task_index += 1
 
