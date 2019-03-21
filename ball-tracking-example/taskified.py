@@ -1,4 +1,3 @@
-
 import cv2
 import imutils
 
@@ -7,13 +6,13 @@ greenLower = (29, 86, 6)
 greenUpper = (64, 255, 255)
 
 # grab a reference to the video file
-vs = cv2.VideoCapture("./ball_tracking_example.mp4")
+vs = cv2.VideoCapture("./ball-tracking-example/ball_tracking_example.mp4")
+
 
 # Start defining tasks
 
 
 def get_frame():
-
     # Grab the current frame
     frame = vs.read()[1]
 
@@ -22,13 +21,12 @@ def get_frame():
         return False, None
 
     # Resize to save space
-    frame = imutils.resize(frame, width=600)
+    frame = imutils.resize(frame, width=300)
 
-    return True, (frame)
+    return True, frame
 
 
 def calculate_hsv(frame):
-
     # Blur and convert frame to the HSV color space
     blurred = cv2.GaussianBlur(frame, (11, 11), 0)
     hsv = cv2.cvtColor(blurred, cv2.COLOR_BGR2HSV)
@@ -37,7 +35,6 @@ def calculate_hsv(frame):
 
 
 def calculate_mask(frame, hsv):
-
     # Construct a mask for the color "green"
     # Perform a series of dilations and erosions to remove any small blobs left in the mask
     mask = cv2.inRange(hsv, greenLower, greenUpper)
@@ -48,7 +45,6 @@ def calculate_mask(frame, hsv):
 
 
 def find_contours(frame, mask):
-
     # Find contours in the mask
     contours = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     contours = imutils.grab_contours(contours)
@@ -61,7 +57,6 @@ def find_contours(frame, mask):
 
 
 def calculate_circle(frame, contours):
-
     # Find the largest contour in the mask
     # Use it to compute the minimum enclosing circle and centroid
     c = max(contours, key=cv2.contourArea)
@@ -82,29 +77,26 @@ def draw_circle(frame, x, y, radius, center):
                (0, 255, 255), 2)
     cv2.circle(frame, center, 5, (0, 0, 255), -1)
 
-    return True, (frame)
+    return True, frame
 
 
 def show_frame(frame):
-
     # show the frame to our screen
     cv2.imshow("Frame", frame)
 
     # Sleep a tiny amount before next draw
     cv2.waitKey(1)
 
+    return True, None
+
 
 # Export functions as tasks
-init_tasks = [
-    get_frame
-]
-intermediate_tasks = [
+tasks = [
+    get_frame,
     calculate_hsv,
     calculate_mask,
     find_contours,
     calculate_circle,
-    draw_circle
-]
-end_tasks = [
+    draw_circle,
     show_frame
 ]
