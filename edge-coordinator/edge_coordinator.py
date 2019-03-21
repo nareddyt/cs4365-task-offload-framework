@@ -7,11 +7,6 @@ from taskified import tasks
 DEFAULT_THROUGHPUT_PERIOD = 3
 
 
-# Helper functions
-def init_fps_counts():
-    return [0] * len(tasks)
-
-
 def init_task_names():
     return [task.__name__ for task in tasks]
 
@@ -55,25 +50,37 @@ def run_task(task_func, args):
         return task_func(args)
 
 
-def reconfigure_with_throughput(task_call_counts, start_time, end_time,
-                                task_names, throughput_period, expected_throughput):
+def reconfigure_with_throughput(task_names, loop_count, start_time, end_time,
+                                throughput_period, expected_throughput, task_end_index):
     # Calculate FPS of each task
-    throughput_list = [int(call_count / (end_time - start_time))
-                       for call_count in task_call_counts]
+    throughput = int(loop_count / (end_time - start_time))
 
     # Debug
-    print('Average Throughput over', throughput_period, 'seconds',
-          list(zip(task_names, throughput_list)))
+    print('Average Throughput over', throughput_period, 'seconds:',
+          throughput, 'iterations per second')
 
     # Don't re-adjust in manual mode
     if expected_throughput is None:
+        return task_end_index
+
+    # Check if re-adjustment needed
+    if throughput >= expected_throughput:
+        return task_end_index
+
+    # Last task must be offloaded!
+    offload_task_index = task_end_index - 1
+
+    # Don't offload initial task
+    if offload_task_index == 0:
+        print('Cannot offload initial task!')
         return
 
-    pass
+    # Offload task
+    print('Offloaded task', task_names[offload_task_index])
+    return offload_task_index
 
 
 def main():
-
     # Args parse
     task_end_index, expected_throughput = parse_args()
     print(task_end_index, expected_throughput)
@@ -84,7 +91,7 @@ def main():
 
     # Variables for calculating throughput
     throughput_period = DEFAULT_THROUGHPUT_PERIOD
-    task_call_counts = init_fps_counts()
+    loop_count = 0
     start_time = time.time()
 
     # Init tasks args
@@ -100,22 +107,22 @@ def main():
         to_continue, next_task_args = run_task(task_func=task,
                                                args=next_task_args)
 
-        # Increment fps counter
-        task_call_counts[task_index] += 1
-
         # Calculate fps
         end_time = time.time()
         if (end_time - start_time) > throughput_period:
             # Configuration with task throughputs if needed
-            reconfigure_with_throughput(task_call_counts=task_call_counts,
-                                        start_time=start_time,
-                                        end_time=end_time,
-                                        task_names=task_names,
-                                        throughput_period=throughput_period,
-                                        expected_throughput=expected_throughput)
+            task_end_index = reconfigure_with_throughput(
+                task_names=task_names,
+                loop_count=loop_count,
+                start_time=start_time,
+                end_time=end_time,
+                throughput_period=throughput_period,
+                expected_throughput=expected_throughput,
+                task_end_index=task_end_index
+            )
 
             # Reset vars for throughput
-            task_call_counts = init_fps_counts()
+            loop_count = 0
             start_time = time.time()
 
         # No need to continue running tasks, end of stream
@@ -125,9 +132,11 @@ def main():
         # Increment index (cyclical)
         task_index += 1
 
-        # Reset to first frame if more function calls are not needed or reached end of sequence
+        # Reset to first frame if more function calls are not needed
+        # or reached end of sequence
         if to_continue is False or task_index >= task_end_index:
             task_index = 0
+            loop_count += 1
             next_task_args = None
             continue
 
