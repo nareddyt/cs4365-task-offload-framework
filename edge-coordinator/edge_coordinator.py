@@ -4,7 +4,7 @@ import sys
 from taskified import tasks
 
 # Show FPS every given number of seconds
-FPS_AVG_WINDOW = 3
+FPS_CALC_REPEAT_TIME = 3
 
 
 # Helper functions
@@ -30,17 +30,7 @@ def init_task_limit():
     return end_index
 
 
-# Variables for state
-task_index = 0
-task_end_index = init_task_limit()
-fps_counts = init_fps_counts()
-task_names = init_task_names()
-
-
-def run_with_fps(task_func, args):
-    # Increment fps counter
-    fps_counts[task_index] += 1
-
+def run_task(task_func, args):
     # Call task
     if args is None:
         # No args to pass
@@ -53,41 +43,63 @@ def run_with_fps(task_func, args):
         return task_func(args)
 
 
-# To keep track of FPS
-start_time = time.time()
+def decide_with_fps(task_call_counts, start_time, end_time, task_names):
+    # Calculate FPS of each task
+    throughput_list = [call_count / (end_time - start_time)
+                       for call_count in task_call_counts]
 
-# Init tasks args
-next_task_args = None
+    # Debug
+    print('Average Throughput over', FPS_CALC_REPEAT_TIME, 'seconds',
+          list(zip(task_names, throughput_list)))
 
-# Keep running tasks in sequential order
-while True:
 
-    # Determine which task to run
-    task = tasks[task_index]
+def main():
+    # Variables for task state
+    task_index = 0
+    task_names = init_task_names()
+    task_end_index = init_task_limit()
 
-    # Run task
-    to_continue, next_task_args = run_with_fps(task_func=task, args=next_task_args)
+    # Variables for calculating throughput
+    task_call_counts = init_fps_counts()
+    start_time = time.time()
 
-    # Calculate fps
-    end_time = time.time()
-    if (end_time - start_time) > FPS_AVG_WINDOW:
-        # Calculate FPS of each task
-        real_fps_list = [fps_count / (end_time - start_time) for fps_count in fps_counts]
-        print('Average FPS', list(zip(task_names, real_fps_list)))
+    # Init tasks args
+    next_task_args = None
 
-        # Reset vars for fps
-        fps_counts = init_fps_counts()
-        start_time = time.time()
+    # Keep running tasks in sequential order
+    while True:
 
-    # No need to continue running tasks, end of stream
-    if to_continue is False and task_index == 0:
-        break
+        # Determine which task to run
+        task = tasks[task_index]
 
-    # Increment index (cyclical)
-    task_index += 1
+        # Run task
+        to_continue, next_task_args = run_task(task_func=task, args=next_task_args)
 
-    # Reset to first frame if more function calls are not needed or reached end of sequence
-    if to_continue is False or task_index >= task_end_index:
-        task_index = 0
-        next_task_args = None
-        continue
+        # Increment fps counter
+        task_call_counts[task_index] += 1
+
+        # Calculate fps
+        end_time = time.time()
+        if (end_time - start_time) > FPS_CALC_REPEAT_TIME:
+            decide_with_fps(task_call_counts, start_time, end_time, task_names)
+
+            # Reset vars for fps
+            task_call_counts = init_fps_counts()
+            start_time = time.time()
+
+        # No need to continue running tasks, end of stream
+        if to_continue is False and task_index == 0:
+            break
+
+        # Increment index (cyclical)
+        task_index += 1
+
+        # Reset to first frame if more function calls are not needed or reached end of sequence
+        if to_continue is False or task_index >= task_end_index:
+            task_index = 0
+            next_task_args = None
+            continue
+
+
+if __name__ == '__main__':
+    main()
