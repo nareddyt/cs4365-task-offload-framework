@@ -1,10 +1,18 @@
 import time
 import sys
+import socket
+import pickle
+import struct
 
 from taskified import tasks
 
 # Show throughputs every given number of seconds
 DEFAULT_THROUGHPUT_PERIOD = 3
+
+# Peer server connection for offload tasking
+# https://stackoverflow.com/questions/30988033/sending-live-video-frame-over-network-in-python-opencv
+client_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+client_sock.connect(('localhost', 8089))
 
 
 def init_task_names():
@@ -135,6 +143,13 @@ def main():
         # Reset to first frame if more function calls are not needed
         # or reached end of sequence
         if to_continue is False or task_index >= task_end_index:
+
+            if to_continue is not False:
+                # Send frame to peer server FIXME
+                data = pickle.dumps(next_task_args)
+                client_sock.sendall(struct.pack("L", len(data)) + data)
+
+            # Reset vars
             task_index = 0
             loop_count += 1
             next_task_args = None
