@@ -1,9 +1,8 @@
-import socket
-import sys
-import cv2
 import pickle
-import numpy as np
+import socket
 import struct
+
+import cv2
 
 HOST = ''
 PORT = 8089
@@ -23,7 +22,7 @@ payload_size = struct.calcsize("L")
 
 while True:
 
-    # Retrieve message size first
+    # Retrieve message size
     while len(data) < payload_size:
         data += conn.recv(4096)
 
