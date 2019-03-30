@@ -88,6 +88,18 @@ def reconfigure_with_throughput(task_names, loop_count, start_time, end_time,
     return offload_task_index
 
 
+def offload_to_peer(next_task_args):
+
+    # FIXME hardcoded to last task
+    data = pickle.dumps(next_task_args)
+
+    # Send message length first
+    message_size = struct.pack("L", len(data))
+
+    # Then data
+    client_sock.sendall(message_size + data)
+
+
 def main():
     # Args parse
     task_end_index, expected_throughput = parse_args()
@@ -145,9 +157,8 @@ def main():
         if to_continue is False or task_index >= task_end_index:
 
             if to_continue is not False:
-                # Send frame to peer server FIXME
-                data = pickle.dumps(next_task_args)
-                client_sock.sendall(struct.pack("L", len(data)) + data)
+                # Send frame to peer server
+                offload_to_peer(next_task_args=next_task_args)
 
             # Reset vars
             task_index = 0
