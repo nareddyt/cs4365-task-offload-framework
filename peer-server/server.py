@@ -21,6 +21,7 @@ def run_task(task_func, args):
         # Single arg
         return task_func(args)
 
+
 def main():
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     print('Socket created')
@@ -33,7 +34,7 @@ def main():
     conn, addr = s.accept()
 
     data = b''
-    next_task_args = []
+    next_task_args_list = []
     num_next_task_args = 0
     next_task_num = 0
     payload_size = struct.calcsize("L")
@@ -58,7 +59,6 @@ def main():
 
         # Retrieve all args per task
         for i in range(num_next_task_args):
-            argsize = 0
             # Retrieve each argument size
             while len(data) < payload_size:
                 data += conn.recv(4096)
@@ -75,21 +75,47 @@ def main():
             # Extract next arg
             next_arg = pickle.loads(next_arg_data)
 
-            next_task_args.append(next_arg)
+            next_task_args_list.append(next_arg)
 
-        print(num_next_task_args)
+        # Set variables and args for running tasks
+        next_task_run_index = next_task_num
+        if len(next_task_args_list) == 0:
+            # No args to pass
+            next_task_args = None
+        elif len(next_task_args_list) == 1:
+            next_task_args = next_task_args_list[0]
+        else:
+            # FIXME assuming more than 1 arg means tuple form is required for params
+            next_task_args = tuple(next_task_args_list)
 
-    # while True:
-        # FIXME hardcoded to second-to-last task
-        # task = tasks[next_task_num]
-        # to_continue, next_task_args = run_task(task_func=task,
-        #                                        args=next_task_args)
+        # Save the args of the next task to be run in case task loop is reset
+        next_task_args_saved = next_task_args
 
-        cv2.circle(next_task_args[0], (int(next_task_args[1]), int(next_task_args[2])), int(next_task_args[3]),
-                   (0, 255, 255), 2)
-        cv2.circle(next_task_args[0], next_task_args[4], 5, (0, 0, 255), -1)
-        cv2.imshow('frame', next_task_args[0])
-        cv2.waitKey(1)
+        while True:
+            task = tasks[next_task_run_index]
+            to_continue, next_task_args = run_task(task_func=task,
+                                                   args=next_task_args)
+            # Converting args to list format
+            # next_task_args_list = []
+            # if next_task_args is not None:
+            #     if type(next_task_args) is tuple:
+            #         for arg in next_task_args:
+            #             next_task_args_list.append(arg)
+            #     else:
+            #         next_task_args_list.append(next_task_args)
+
+            if next_task_run_index == (len(tasks) - 1):
+                # data = b''
+                break
+
+            next_task_run_index += 1
+
+            if to_continue is False:
+                # FIXME reset to initially offloaded task or first task
+                next_task_run_index = 0
+                next_task_args = None
+                # next_task_run_index = next_task_num
+                # next_task_args = next_task_args_saved
 
 
 
