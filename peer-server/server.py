@@ -9,6 +9,7 @@ from taskified import tasks
 HOST = ''
 PORT = 8089
 
+
 def run_task(task_func, args):
     # Call task
     if args is None:
@@ -34,12 +35,12 @@ def main():
     conn, addr = s.accept()
 
     data = b''
-    next_task_args_list = []
-    num_next_task_args = 0
-    next_task_num = 0
     payload_size = struct.calcsize("L")
 
     while True:
+        # Reset args list every loop
+        next_task_args_list = []
+
         # Retrieve number of args for next task
         # TODO handle 0 args with num args
         while len(data) < payload_size:
@@ -88,35 +89,17 @@ def main():
             # FIXME assuming more than 1 arg means tuple form is required for params
             next_task_args = tuple(next_task_args_list)
 
-        # Save the args of the next task to be run in case task loop is reset
-        next_task_args_saved = next_task_args
-
         while True:
             task = tasks[next_task_run_index]
             to_continue, next_task_args = run_task(task_func=task,
                                                    args=next_task_args)
-            # Converting args to list format
-            # next_task_args_list = []
-            # if next_task_args is not None:
-            #     if type(next_task_args) is tuple:
-            #         for arg in next_task_args:
-            #             next_task_args_list.append(arg)
-            #     else:
-            #         next_task_args_list.append(next_task_args)
 
-            if next_task_run_index == (len(tasks) - 1):
-                # data = b''
+            if to_continue is False or next_task_run_index == (len(tasks) - 1):
+                # Done with this message, get next message by breaking out of loop
                 break
 
+            # Still working on this message, increment task num
             next_task_run_index += 1
-
-            if to_continue is False:
-                # FIXME reset to initially offloaded task or first task
-                next_task_run_index = 0
-                next_task_args = None
-                # next_task_run_index = next_task_num
-                # next_task_args = next_task_args_saved
-
 
 
 if __name__ == '__main__':

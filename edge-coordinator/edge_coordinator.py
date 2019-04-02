@@ -102,6 +102,7 @@ def offload_to_peer(next_task_num, next_task_args):
 
     # Send number of args
     send_data += struct.pack("L", len(next_arg_data))
+
     # Send the next task's number
     send_data += struct.pack("L", next_task_num)
 
@@ -113,13 +114,6 @@ def offload_to_peer(next_task_num, next_task_args):
             send_data += data
 
     client_sock.sendall(send_data)
-
-    # data = pickle.dumps(next_task_args)
-    # # Send message length first
-    # message_size = struct.pack("L", len(data))
-    # send_data += message_size
-    # send_data += data
-    # client_sock.sendall(send_data)
 
 
 
