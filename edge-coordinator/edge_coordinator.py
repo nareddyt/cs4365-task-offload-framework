@@ -88,16 +88,39 @@ def reconfigure_with_throughput(task_names, loop_count, start_time, end_time,
     return offload_task_index
 
 
-def offload_to_peer(next_task_args):
+def offload_to_peer(next_task_num, next_task_args):
 
-    # FIXME hardcoded to last task
-    data = pickle.dumps(next_task_args)
+    send_data = b''
+    next_arg_data = []
 
-    # Send message length first
-    message_size = struct.pack("L", len(data))
+    if next_task_args is not None:
+        if type(next_task_args) is tuple:
+            for arg in next_task_args:
+                next_arg_data.append(arg)
+        else:
+            next_arg_data.append(next_task_args)
 
-    # Then data
-    client_sock.sendall(message_size + data)
+    # Send number of args
+    send_data += struct.pack("L", len(next_arg_data))
+    # Send the next task's number
+    send_data += struct.pack("L", next_task_num)
+
+    if len(next_arg_data) > 0:
+        for next_arg in next_arg_data:
+            data = pickle.dumps(next_arg)
+            arg_size = struct.pack("L", len(data))
+            send_data += arg_size
+            send_data += data
+
+    client_sock.sendall(send_data)
+
+    # data = pickle.dumps(next_task_args)
+    # # Send message length first
+    # message_size = struct.pack("L", len(data))
+    # send_data += message_size
+    # send_data += data
+    # client_sock.sendall(send_data)
+
 
 
 def main():
@@ -158,7 +181,7 @@ def main():
 
             if to_continue is not False:
                 # Send frame to peer server
-                offload_to_peer(next_task_args=next_task_args)
+                offload_to_peer(next_task_num=task_index, next_task_args=next_task_args)
 
             # Reset vars
             task_index = 0
