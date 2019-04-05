@@ -173,7 +173,7 @@ def main():
         # or reached end of sequence
         if to_continue is False or task_index >= task_end_index:
 
-            if to_continue is not False and task_end_index < len(tasks) - 1:
+            if to_continue is not False and task_end_index < len(tasks):
                 # Send frame to peer server
                 offload_to_peer(next_task_num=task_index, next_task_args=next_task_args)
 
