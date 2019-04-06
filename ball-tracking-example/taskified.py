@@ -64,7 +64,7 @@ def calculate_circle(frame, contours):
     M = cv2.moments(c)
     center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))
 
-    if radius <= 10:
+    if radius <= 5:
         # Circle is false positive
         return False, None
 

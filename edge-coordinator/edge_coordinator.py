@@ -45,7 +45,16 @@ def parse_args():
     return end_index, expected_throughput
 
 
+def emulate_iot_device():
+    # Our computer's CPU is too fast
+    # Waste some CPU resources to emulate an IoT device
+    for i in range(0, 500000):
+        pass
+
+
 def run_task(task_func, args):
+    emulate_iot_device()
+
     # Call task
     if args is None:
         # No args to pass
@@ -65,7 +74,7 @@ def reconfigure_with_throughput(task_names, loop_count, start_time, end_time,
 
     # Debug
     print('Average Throughput over', throughput_period, 'seconds:',
-          throughput, 'iterations per second')
+          throughput, 'frames per second')
 
     # Don't re-adjust in manual mode
     if expected_throughput is None:
@@ -89,7 +98,6 @@ def reconfigure_with_throughput(task_names, loop_count, start_time, end_time,
 
 
 def offload_to_peer(next_task_num, next_task_args):
-
     send_data = b''
     next_arg_data = []
 
@@ -114,7 +122,6 @@ def offload_to_peer(next_task_num, next_task_args):
             send_data += data
 
     client_sock.sendall(send_data)
-
 
 
 def main():
@@ -164,6 +171,7 @@ def main():
 
         # No need to continue running tasks, end of stream
         if to_continue is False and task_index == 0:
+            client_sock.close()
             break
 
         # Increment index (cyclical)
