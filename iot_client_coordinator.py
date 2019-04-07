@@ -5,7 +5,7 @@ import socket
 import pickle
 import struct
 
-from taskified import tasks
+from ball_tracking_example.taskified import tasks
 
 # Show throughputs every given number of seconds
 DEFAULT_THROUGHPUT_PERIOD = 3
@@ -24,7 +24,7 @@ def parse_args():
     end_index = int(sys.argv[1])
 
     # Check validity
-    if not 0 < end_index <= len(tasks):
+    if not 0 < end_index < len(tasks):
         raise AssertionError('Manual Configuration number of tasks to run is not valid')
 
     # Check for automatic configuration
@@ -64,7 +64,7 @@ def run_task(task_func, args):
 
 
 def reconfigure_with_throughput(task_names, loop_count, start_time, end_time,
-                                throughput_period, expected_throughput, task_end_index):
+                                throughput_period, expected_throughput, num_client_tasks):
     # Calculate FPS of each task
     throughput = int(loop_count / (end_time - start_time))
 
@@ -74,14 +74,15 @@ def reconfigure_with_throughput(task_names, loop_count, start_time, end_time,
 
     # Don't re-adjust in manual mode
     if expected_throughput is None:
-        return task_end_index
+        print('Running in manual mode, no throughput re-adjustment')
+        return num_client_tasks
 
     # Check if re-adjustment needed
     if throughput >= expected_throughput:
-        return task_end_index
+        return num_client_tasks
 
     # Last task must be offloaded!
-    offload_task_index = task_end_index - 1
+    offload_task_index = num_client_tasks - 1
 
     # Don't offload initial task
     if offload_task_index == 0:
@@ -122,8 +123,7 @@ def offload_to_peer(next_task_num, next_task_args, client_socket):
 
 def main():
     # Args parse
-    task_end_index, expected_throughput = parse_args()
-    print(task_end_index, expected_throughput)
+    num_client_tasks, expected_throughput = parse_args()
 
     # Variables for task state
     task_index = 0
@@ -137,12 +137,24 @@ def main():
     # Init tasks args
     next_task_args = None
 
+    # Peer server connection for offload tasking
+    # https://stackoverflow.com/questions/30988033/sending-live-video-frame-over-network-in-python-opencv
     client_socket = None
-    if task_end_index < len(tasks):
-        # Peer server connection for offload tasking
-        # https://stackoverflow.com/questions/30988033/sending-live-video-frame-over-network-in-python-opencv
+    if num_client_tasks < len(tasks):
+        print('Running', num_client_tasks, 'out of', len(tasks),
+              ' tasks on the client. Connecting to server to offload the remaining',
+              len(tasks) - num_client_tasks, 'tasks')
+
+        # Ensure env var is present
+        if 'HOST' not in os.environ:
+            raise EnvironmentError(
+                'HOST env var not set to server address. Please set it as described in the README.md')
+
+        # Create connection
         client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         client_socket.connect((os.environ['HOST'], 8089))
+    else:
+        print('Running all', len(tasks), 'tasks on IoT Client, not connecting to Cloud Server')
 
     # Keep running tasks in sequential order
     while True:
@@ -157,15 +169,15 @@ def main():
         # Calculate fps
         end_time = time.time()
         if (end_time - start_time) > throughput_period:
-            # Configuration with task throughputs if needed
-            task_end_index = reconfigure_with_throughput(
+            # Configuration with task throughput if needed
+            num_client_tasks = reconfigure_with_throughput(
                 task_names=task_names,
                 loop_count=loop_count,
                 start_time=start_time,
                 end_time=end_time,
                 throughput_period=throughput_period,
                 expected_throughput=expected_throughput,
-                task_end_index=task_end_index
+                num_client_tasks=num_client_tasks
             )
 
             # Reset vars for throughput
@@ -182,7 +194,7 @@ def main():
 
         # Reset to first frame if more function calls are not needed
         # or reached end of sequence
-        if to_continue is False or task_index >= task_end_index:
+        if to_continue is False or task_index >= num_client_tasks:
 
             if to_continue is not False and client_socket is not None:
                 # Send frame to peer server

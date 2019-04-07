@@ -2,9 +2,7 @@ import pickle
 import socket
 import struct
 
-import cv2
-
-from taskified import tasks
+from ball_tracking_example.taskified import tasks
 
 HOST = ''
 PORT = 8089

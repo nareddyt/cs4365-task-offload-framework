@@ -6,7 +6,7 @@ greenLower = (29, 86, 6)
 greenUpper = (64, 255, 255)
 
 # grab a reference to the video file
-vs = cv2.VideoCapture("./ball-tracking-example/ball_tracking_example.mp4")
+vs = cv2.VideoCapture("./ball_tracking_example/ball_tracking_example.mp4")
 
 
 # Start defining tasks
