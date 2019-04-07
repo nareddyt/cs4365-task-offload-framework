@@ -21,6 +21,21 @@ We implemented a framework that can efficiently use the maximal amount of comput
 
 _See our CS 4365 [Project Proposal](https://docs.google.com/document/d/1iRsW9NkbXXcQAsSKtGo_3otVzxWkg8bOh6UHF1j1C5U/edit?usp=sharing) for more details._
 
+## Prerequisites
+
+This project was implemented using `Python 3.7`.
+This project should still run on other minor versions of `Python 3`, but we provide no guarantees.
+
+`pip` is required to install python dependencies.
+
+### Optional Requirements
+
+To realistically calculate metrics, the following are required:
+- A IoT device with Python Support (Raspberry Pi Zero)
+- Compute resources on a cloud provider with Python support (GCP Compute Engine)
+
+**These are optional:** The IoT device and Cloud server can be run in two separate processes on a single development machine.
+
 ## Install
 
 Run the following from the root folder:
