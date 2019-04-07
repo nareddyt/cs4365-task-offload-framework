@@ -1,5 +1,6 @@
 import time
 import sys
+import os
 import socket
 import pickle
 import struct
@@ -8,11 +9,6 @@ from taskified import tasks
 
 # Show throughputs every given number of seconds
 DEFAULT_THROUGHPUT_PERIOD = 3
-
-# Peer server connection for offload tasking
-# https://stackoverflow.com/questions/30988033/sending-live-video-frame-over-network-in-python-opencv
-client_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-client_sock.connect(('localhost', 8089))
 
 
 def init_task_names():
@@ -97,7 +93,7 @@ def reconfigure_with_throughput(task_names, loop_count, start_time, end_time,
     return offload_task_index
 
 
-def offload_to_peer(next_task_num, next_task_args):
+def offload_to_peer(next_task_num, next_task_args, client_socket):
     send_data = b''
     next_arg_data = []
 
@@ -121,7 +117,7 @@ def offload_to_peer(next_task_num, next_task_args):
             send_data += arg_size
             send_data += data
 
-    client_sock.sendall(send_data)
+    client_socket.sendall(send_data)
 
 
 def main():
@@ -140,6 +136,13 @@ def main():
 
     # Init tasks args
     next_task_args = None
+
+    client_socket = None
+    if task_end_index < len(tasks):
+        # Peer server connection for offload tasking
+        # https://stackoverflow.com/questions/30988033/sending-live-video-frame-over-network-in-python-opencv
+        client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        client_socket.connect((os.environ['HOST'], 8089))
 
     # Keep running tasks in sequential order
     while True:
@@ -171,7 +174,7 @@ def main():
 
         # No need to continue running tasks, end of stream
         if to_continue is False and task_index == 0:
-            client_sock.close()
+            client_socket.close()
             break
 
         # Increment index (cyclical)
@@ -181,9 +184,11 @@ def main():
         # or reached end of sequence
         if to_continue is False or task_index >= task_end_index:
 
-            if to_continue is not False and task_end_index < len(tasks):
+            if to_continue is not False and client_socket is not None:
                 # Send frame to peer server
-                offload_to_peer(next_task_num=task_index, next_task_args=next_task_args)
+                offload_to_peer(next_task_num=task_index,
+                                next_task_args=next_task_args,
+                                client_socket=client_socket)
 
             # Reset vars
             task_index = 0
