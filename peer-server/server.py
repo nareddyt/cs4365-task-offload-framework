@@ -86,7 +86,6 @@ def main():
         elif len(next_task_args_list) == 1:
             next_task_args = next_task_args_list[0]
         else:
-            # FIXME assuming more than 1 arg means tuple form is required for params
             next_task_args = tuple(next_task_args_list)
 
         while True:
