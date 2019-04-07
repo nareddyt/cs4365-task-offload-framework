@@ -142,7 +142,7 @@ def main():
     client_socket = None
     if num_client_tasks < len(tasks):
         print('Running', num_client_tasks, 'out of', len(tasks),
-              ' tasks on the client. Connecting to server to offload the remaining',
+              'tasks on the client. Connecting to server to offload the remaining',
               len(tasks) - num_client_tasks, 'tasks')
 
         # Ensure env var is present

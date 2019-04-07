@@ -21,7 +21,7 @@ def get_frame():
         return False, None
 
     # Resize to save space
-    frame = imutils.resize(frame, width=300)
+    frame = imutils.resize(frame, width=500)
 
     return True, frame
 
