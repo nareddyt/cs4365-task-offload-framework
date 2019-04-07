@@ -7,6 +7,7 @@
 ## Table of Contents
 
 - [Background](#background)
+- [Prerequisites](#prerequisites)
 - [Install](#install)
 - [Usage](#usage)
 - [Maintainers](#maintainers)
