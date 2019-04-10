@@ -1,5 +1,6 @@
 import cv2
 import imutils
+import threading
 
 # Define the lower and upper boundaries of the "green" ball in the HSV color space
 greenLower = (29, 86, 6)
@@ -81,8 +82,16 @@ def draw_circle(frame, x, y, radius, center):
 
 
 def show_frame(frame):
+
+    # come up with a unique name
+    frame_name = "Local frame"
+    try:
+        frame_name = threading.current_thread().getName()
+    except:
+        pass
+
     # show the frame to our screen
-    cv2.imshow("Frame", frame)
+    cv2.imshow(frame_name, frame)
 
     # Sleep a tiny amount before next draw
     cv2.waitKey(1)

@@ -87,7 +87,7 @@ def reconfigure_with_throughput(task_names, loop_count, start_time, end_time,
     # Don't offload initial task
     if offload_task_index == 0:
         print('Cannot offload initial task!')
-        return
+        return num_client_tasks
 
     # Offload task
     print('Offloaded task', task_names[offload_task_index])
