@@ -17,11 +17,13 @@ vs = cv2.VideoCapture("./ball_tracking_example.mp4")
 
 start_time = time.time()
 fps_counter = 0
+frame_counter = 0
 
 # keep looping
 while True:
     # grab the current frame
     frame = vs.read()[1]
+    frame_counter += 1
 
     # if we are viewing a video and we did not grab a frame,
     # then we have reached the end of the video
@@ -83,3 +85,5 @@ vs.release()
 
 # close all windows
 cv2.destroyAllWindows()
+
+print('NUMBER OF FRAMES =', frame_counter)
