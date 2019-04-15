@@ -119,6 +119,7 @@ def on_new_client(conn):
 
     except ConnectionResetError:
         # Client disconnected
+        print('Client disconnected')
         conn.close()
 
 
