@@ -7,6 +7,7 @@
 ## Table of Contents
 
 - [Background](#background)
+- [Code Structure](#code-structure)
 - [Prerequisites](#prerequisites)
 - [Install](#install)
 - [Usage](#usage)
