@@ -20,7 +20,7 @@ Many IoT devices lack the compute resources to process and analyze data locally.
 
 We implemented a framework that can efficiently use the maximal amount of compute resources on the IoT device while still maintaining a high throughput of data processing. Such a framework would allow data processing to be run directly on the IoT device, but would automatically offload data processing tasks to the cloud when throughput expectations are not met. By making maximal use of local compute resources on the IoT device, this framework reduces the cost of data processing on the cloud, while still allowing tasks to be offloaded to the cloud if greater throughput is required.
 
-_See our CS 4365 [Project Proposal](https://docs.google.com/document/d/1iRsW9NkbXXcQAsSKtGo_3otVzxWkg8bOh6UHF1j1C5U/edit?usp=sharing) for more details._
+_See our CS 4365 [Final Report](https://docs.google.com/document/d/1Dh7aKAofPXTKovecV3e-9cyr0K4ERvkXMdTNScChcp8/edit?usp=sharing) for more details._
 
 ## Code Structure
 
