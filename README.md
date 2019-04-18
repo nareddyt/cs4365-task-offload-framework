@@ -22,6 +22,29 @@ We implemented a framework that can efficiently use the maximal amount of comput
 
 _See our CS 4365 [Project Proposal](https://docs.google.com/document/d/1iRsW9NkbXXcQAsSKtGo_3otVzxWkg8bOh6UHF1j1C5U/edit?usp=sharing) for more details._
 
+## Code Structure
+
+Our framework is designed to work with any IoT application that follows the **Task Interface**.
+Our final report contains more information on the design of the **Task Interface**.
+`task_interface_example.py` provides a explanation of the **Task Interface** via example code.
+
+For the performance evaluation and demo, we have provided 1 example IoT application in the `ball_tracking_example` folder.
+`ball_tracking_example/sequential.py` contains the original IoT example application found in [a blog post](https://www.pyimagesearch.com/2015/09/14/ball-tracking-with-opencv/) online.
+`ball_tracking_example/taskified.py` contains the modified IoT application that adheres to the **Task Interface**.
+
+`iot_client_coordinator.py` contains the framework code that runs on the IoT device. This is responsible for:
+
+- Collecting data from the IoT sensors (_example: camera_)
+- Running tasks on the IoT device
+- Collecting metrics on IoT device load
+- Offload tasks to the server when required (_The Automatic Scheduler_)
+
+`cloud_server_coordinator.py` contains the framework code that runs on the cloud server. This is responsible for:
+
+- Receiving tasks from the IoT device
+- Running the remaining tasks on the server
+- Reporting results of computation
+
 ## Prerequisites
 
 This project was implemented using `Python 3.7`.
@@ -72,7 +95,7 @@ When running the IoT Client (in a new terminal session),
 set the `HOST` environment variable to this static IP address. Examples:
 
 ```bash
-export HOST='localhost'         # When running cloud locally for testing
+export HOST='localhost'         # When running server locally for testing
 export HOST='35.190.176.6'      # Realistic server in the cloud
 ```
 
