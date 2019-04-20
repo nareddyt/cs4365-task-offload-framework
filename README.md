@@ -2,7 +2,7 @@
 
 [![standard-readme compliant](https://img.shields.io/badge/standard--readme-OK-green.svg?style=flat-square)](https://github.com/RichardLitt/standard-readme)
 
-> A framework for IoT devices to offload tasks to the cloud, resulting in efficient peer-to-peer computation.
+> A framework for IoT devices to offload tasks to the cloud, resulting in efficient computation and decreased cloud costs.
 
 ## Table of Contents
 
